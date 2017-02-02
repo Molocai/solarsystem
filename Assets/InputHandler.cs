@@ -53,6 +53,7 @@ namespace UbiSolarSystem
         {
             ClickStatus = CLICK_STATUS.RELEASING;
             Vector3 direction = GetMousePositionInWorld() - PreviousMousePosition;
+            Cursor.visible = true;
 
             if (SelectedPlanet)
             {
@@ -68,7 +69,8 @@ namespace UbiSolarSystem
                 return;
             }
 
-            SelectedPlanet.gameObject.transform.position = GetMousePositionInWorld();
+            SelectedPlanet.gameObject.transform.position = Vector3.Lerp(SelectedPlanet.gameObject.transform.position, GetMousePositionInWorld(), Time.deltaTime * 3f);
+            Cursor.visible = false;
             PreviousMousePosition = GetMousePositionInWorld();
         }
 

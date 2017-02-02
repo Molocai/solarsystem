@@ -124,7 +124,7 @@ namespace UbiSolarSystem
                 GameObject explosion = Instantiate(PrefabParticlesExplosion, collision.contacts[0].point, Quaternion.identity);
 
                 Destroy(explosion, 3f);
-                Destroy(gameObject, 0.3f);
+                Destroy(gameObject);
             }
         }
 
