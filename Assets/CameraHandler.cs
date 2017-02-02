@@ -26,6 +26,8 @@ namespace UbiSolarSystem
         public CLICK_STATUS ClickStatus;
         public Planet SelectedPlanet;
 
+        private Vector3 PreviousMousePosition;
+
         private void OnClickAction()
         {
             ClickStatus = CLICK_STATUS.CLICKING;
@@ -35,7 +37,12 @@ namespace UbiSolarSystem
         private void OnReleaseAction()
         {
             ClickStatus = CLICK_STATUS.RELEASING;
-            SelectedPlanet = null;
+            Vector3 direction = GetMousePositionInWorld() - PreviousMousePosition;
+
+            if (SelectedPlanet)
+            {
+                SelectedPlanet = null;
+            }
         }
 
         private void OnDragAction()
@@ -47,6 +54,7 @@ namespace UbiSolarSystem
             }
 
             SelectedPlanet.gameObject.transform.position = GetMousePositionInWorld();
+            PreviousMousePosition = GetMousePositionInWorld();
         }
 
         void Start()
