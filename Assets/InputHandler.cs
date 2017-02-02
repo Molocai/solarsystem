@@ -2,13 +2,28 @@
 
 namespace UbiSolarSystem
 {
-    public class CameraHandler : MonoBehaviour
+    public class InputHandler : MonoBehaviour
     {
+        /// <summary>
+        /// Describes the current click state
+        /// </summary>
         public enum CLICK_STATUS
         {
+            /// <summary>
+            /// No button is pressed
+            /// </summary>
             HOVERING,
+            /// <summary>
+            /// The button is currently begin pressed (scope: frame)
+            /// </summary>
             CLICKING,
+            /// <summary>
+            /// The button has already been pressed and is being held down
+            /// </summary>
             DRAGGING,
+            /// <summary>
+            /// The button is currently being released (scope: frame)
+            /// </summary>
             RELEASING
         }
 
@@ -103,27 +118,38 @@ namespace UbiSolarSystem
             }
         }
 
+        /// <summary>
+        /// Returns the planet at a given position if it exists. Null otherwise.
+        /// </summary>
+        /// <param name="position">The position to look for a planet</param>
+        /// <returns>The planet at given position</returns>
         private Planet GetPlanetAtPosition(Vector3 position)
         {
             RaycastHit hitInfo;
             Ray rayhit = Camera.main.ScreenPointToRay(position);
 
-            Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerMask.NameToLayer("Planet"), QueryTriggerInteraction.Ignore);
+            // Raycast only on PLANET layer and ignore triggers
+            Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerManager.ToInt(LAYER.PLANET), QueryTriggerInteraction.Ignore);
 
             if (hitInfo.collider != null)
             {
                 return hitInfo.collider.GetComponent<Planet>();
             }
 
-            return null;
+            return null;            
         }
 
+        /// <summary>
+        /// Returns the world position of the mouse along the (0,0,0) plane
+        /// </summary>
+        /// <returns>The mouse position in the world</returns>
         private Vector3 GetMousePositionInWorld()
         {
             RaycastHit hitInfo;
             Ray rayhit = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-            Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerMask.NameToLayer("Floor"), QueryTriggerInteraction.Ignore);
+            // Raycast only on the FLOOR layer and ignore triggers
+            Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerManager.ToInt(LAYER.FLOOR), QueryTriggerInteraction.Ignore);
 
             if (hitInfo.collider != null)
             {
@@ -132,20 +158,5 @@ namespace UbiSolarSystem
 
             return Vector3.zero;
         }
-
-        //private void OnDrawGizmos()
-        //{
-        //    Gizmos.color = Color.red;
-
-        //    RaycastHit hitInfo;
-        //    Ray rayhit = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        //    Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerMask.NameToLayer("Floor"), QueryTriggerInteraction.Ignore);
-
-        //    if (hitInfo.collider != null)
-        //    {
-        //        Gizmos.DrawWireSphere(hitInfo.point, 1f);
-        //    }
-        //}
     }
 }
