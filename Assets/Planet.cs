@@ -7,6 +7,7 @@ namespace UbiSolarSystem
     {
         [Header("Physics parameters")]
         public float Mass = 2f;
+        public Vector3 InitialVelocity;
         public bool CanAffectOtherPlanets = true;
         public bool IsAffectedByOtherPlanets = true;
 
@@ -14,10 +15,12 @@ namespace UbiSolarSystem
         public GameObject PrefabParticlesExplosion;
 
         private List<Planet> PlanetsAffectingMe;
+        private Vector3 Velocity;
 
         void Start()
         {
             PlanetsAffectingMe = new List<Planet>();
+            Velocity = InitialVelocity;
         }
 
         void Update()
@@ -33,9 +36,11 @@ namespace UbiSolarSystem
                     finalForce += force;
                 }
 
-                Debug.DrawLine(transform.position + new Vector3(0, 1, 0), transform.position + finalForce + new Vector3(0, 1, 0), Color.red);
+                Velocity = Velocity + finalForce * Time.deltaTime;
 
-                transform.position = transform.position + finalForce * Time.deltaTime;
+                Debug.DrawLine(transform.position + new Vector3(0, 1, 0), transform.position + Velocity + new Vector3(0, 1, 0), Color.red);
+
+                transform.position = transform.position + (Velocity * Time.deltaTime);
             }
         }
 
@@ -67,6 +72,13 @@ namespace UbiSolarSystem
 
         private void OnTriggerEnter(Collider other)
         {
+            // For some reason, triggers can trigger a trigger if both have a non kinematic
+            // rigidbody. So this test is necessary.
+            if (other.isTrigger)
+            {
+                return;
+            }
+
             Planet otherPlanet = other.GetComponent<Planet>();
             if (otherPlanet && !PlanetsAffectingMe.Contains(otherPlanet))
             {
@@ -76,6 +88,13 @@ namespace UbiSolarSystem
 
         private void OnTriggerExit(Collider other)
         {
+            // For some reason, triggers can trigger a trigger if both have a non kinematic
+            // rigidbody. So this test is necessary.
+            if (other.isTrigger)
+            {
+                return;
+            }
+
             Planet otherPlanet = other.GetComponent<Planet>();
             if (otherPlanet && PlanetsAffectingMe.Contains(otherPlanet))
             {
