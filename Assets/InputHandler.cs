@@ -38,50 +38,20 @@ namespace UbiSolarSystem
         public static event DragAction OnDragEvent;
         #endregion
 
+        [Range(0f, 5f)]
+        public float PlanetDragSpeed = 3f;
+
         private CLICK_STATUS ClickStatus;
         private Planet SelectedPlanet;
-
-        private Vector3 PreviousMousePosition;
-
-        private void OnClickAction()
-        {
-            ClickStatus = CLICK_STATUS.CLICKING;
-            SelectedPlanet = GetPlanetAtPosition(Input.mousePosition);
-        }
-
-        private void OnReleaseAction()
-        {
-            ClickStatus = CLICK_STATUS.RELEASING;
-            Vector3 direction = GetMousePositionInWorld() - PreviousMousePosition;
-            Cursor.visible = true;
-
-            if (SelectedPlanet)
-            {
-                SelectedPlanet = null;
-            }
-        }
-
-        private void OnDragAction()
-        {
-            ClickStatus = CLICK_STATUS.DRAGGING;
-            if (SelectedPlanet == null)
-            {
-                return;
-            }
-
-            SelectedPlanet.gameObject.transform.position = Vector3.Lerp(SelectedPlanet.gameObject.transform.position, GetMousePositionInWorld(), Time.deltaTime * 3f);
-            Cursor.visible = false;
-            PreviousMousePosition = GetMousePositionInWorld();
-        }
 
         void Start()
         {
             ClickStatus = CLICK_STATUS.HOVERING;
 
             // Register all the events
-            OnClickEvent += OnClickAction;
-            OnReleaseEvent += OnReleaseAction;
-            OnDragEvent += OnDragAction;
+            OnClickEvent += SelectPlanet;
+            OnReleaseEvent += ReleasePlanet;
+            OnDragEvent += DragPlanet;
         }
 
         void Update()
@@ -89,6 +59,8 @@ namespace UbiSolarSystem
             // Left click pressed
             if (Input.GetMouseButtonDown(0) && ClickStatus == CLICK_STATUS.HOVERING)
             {
+                ClickStatus = CLICK_STATUS.CLICKING;
+
                 if (OnClickEvent != null)
                 {
                     OnClickEvent();
@@ -98,6 +70,8 @@ namespace UbiSolarSystem
             // Left click holded
             if (Input.GetMouseButton(0) && (ClickStatus == CLICK_STATUS.DRAGGING || ClickStatus == CLICK_STATUS.CLICKING))
             {
+                ClickStatus = CLICK_STATUS.DRAGGING;
+
                 if (OnDragEvent != null)
                 {
                     OnDragEvent();
@@ -107,6 +81,8 @@ namespace UbiSolarSystem
             // Left click released
             if (Input.GetMouseButtonUp(0) && (ClickStatus == CLICK_STATUS.DRAGGING || ClickStatus == CLICK_STATUS.CLICKING))
             {
+                ClickStatus = CLICK_STATUS.RELEASING;
+
                 if (OnReleaseEvent != null)
                 {
                     OnReleaseEvent();
@@ -121,11 +97,41 @@ namespace UbiSolarSystem
         }
 
         /// <summary>
+        /// Tries to select a planet at mouse position
+        /// </summary>
+        private void SelectPlanet()
+        {
+            SelectedPlanet = GetPlanetAtPosition(Input.mousePosition);
+        }
+
+        /// <summary>
+        /// Tries to drag the held planet
+        /// </summary>
+        private void DragPlanet()
+        {
+            if (SelectedPlanet != null)
+            {
+                SelectedPlanet.gameObject.transform.position = Vector3.Lerp(SelectedPlanet.gameObject.transform.position, GetMousePositionInWorld(), Time.deltaTime * PlanetDragSpeed);
+                Cursor.visible = false;
+            }
+        }
+
+        /// <summary>
+        /// Tries to release the held planet
+        /// </summary>
+        private void ReleasePlanet()
+        {
+            Cursor.visible = true;
+            SelectedPlanet = null;
+        }
+
+        #region Helper functions
+        /// <summary>
         /// Returns the planet at a given position if it exists. Null otherwise.
         /// </summary>
         /// <param name="position">The position to look for a planet</param>
         /// <returns>The planet at given position</returns>
-        private Planet GetPlanetAtPosition(Vector3 position)
+        public static Planet GetPlanetAtPosition(Vector3 position)
         {
             RaycastHit hitInfo;
             Ray rayhit = Camera.main.ScreenPointToRay(position);
@@ -138,7 +144,7 @@ namespace UbiSolarSystem
                 return hitInfo.collider.GetComponent<Planet>();
             }
 
-            return null;            
+            return null;
         }
 
         /// <summary>
@@ -160,5 +166,6 @@ namespace UbiSolarSystem
 
             return Vector3.zero;
         }
+        #endregion
     }
 }
