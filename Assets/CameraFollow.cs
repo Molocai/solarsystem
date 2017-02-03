@@ -20,6 +20,7 @@ namespace UbiSolarSystem
         void Update()
         {
             transform.position = Vector3.Lerp(transform.position, InputHandler.GetMousePositionInWorld() + Offset, Time.deltaTime * FollowSpeed);
+            //transform.position = Vector3.Lerp(transform.position, InputHandler.GetMousePositionInWorld() + Offset, Time.deltaTime * FollowSpeed * 0.01f * Vector3.Distance(transform.position, InputHandler.GetMousePositionInWorld()));
         }
     }
 }

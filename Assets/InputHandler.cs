@@ -38,6 +38,9 @@ namespace UbiSolarSystem
         public static event DragAction OnDragEvent;
         #endregion
 
+        /// <summary>
+        /// Speed at which the planet will follow the mouse once dragged
+        /// </summary>
         [Range(0f, 5f)]
         public float PlanetDragSpeed = 3f;
 
