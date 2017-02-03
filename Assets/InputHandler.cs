@@ -38,8 +38,8 @@ namespace UbiSolarSystem
         public static event DragAction OnDragEvent;
         #endregion
 
-        public CLICK_STATUS ClickStatus;
-        public Planet SelectedPlanet;
+        private CLICK_STATUS ClickStatus;
+        private Planet SelectedPlanet;
 
         private Vector3 PreviousMousePosition;
 
@@ -145,7 +145,7 @@ namespace UbiSolarSystem
         /// Returns the world position of the mouse along the (0,0,0) plane
         /// </summary>
         /// <returns>The mouse position in the world</returns>
-        private Vector3 GetMousePositionInWorld()
+        public static Vector3 GetMousePositionInWorld()
         {
             RaycastHit hitInfo;
             Ray rayhit = Camera.main.ScreenPointToRay(Input.mousePosition);
