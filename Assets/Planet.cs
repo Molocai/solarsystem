@@ -27,8 +27,13 @@ namespace UbiSolarSystem
         [Header("Cosmetic")]
         public GameObject PrefabParticlesExplosion;
 
+        /// <summary>
+        /// Describes the current Velocity of the planet
+        /// </summary>
+        [HideInInspector()]
+        public Vector3 Velocity { get; set; }
+
         private List<Planet> PlanetsAffectingMe;
-        public Vector3 Velocity;
 
         void Start()
         {
@@ -38,30 +43,72 @@ namespace UbiSolarSystem
 
         void Update()
         {
-            // Retrieve all the forces applied by other planets
-            List<Vector3> forces = GetForcesApplyingToMe();
-
             if (IsAffectedByOtherPlanets)
             {
-                Vector3 finalForce = Vector3.zero;
-                // The final force is equal to the sum of each force. *insert darth vader ascii art*
-                foreach (Vector3 force in forces)
-                {
-                    finalForce += force;
-                }
+                Vector3 finalForce = GetSumForcesApplyingToMe(transform.position);
 
                 // V(t) = v(t-1) + acceleration * time
-                Velocity = Velocity + finalForce * Time.deltaTime;
-                Debug.DrawLine(transform.position + new Vector3(0, 1, 0), transform.position + Velocity + new Vector3(0, 1, 0), Color.red);
+                Velocity += finalForce * Time.deltaTime;
+                //Debug.DrawLine(transform.position + new Vector3(0, 1, 0), transform.position + Velocity + new Vector3(0, 1, 0), Color.red);
                 transform.position = transform.position + (Velocity * Time.deltaTime);
+            }
+
+            DrawPrediction();
+        }
+
+        private void DrawPrediction()
+        {
+            float predictionTime = 2f;
+            int predictionSteps = 30;
+            float timeStep = predictionTime / predictionSteps;
+
+            LineRenderer lr = GetComponent<LineRenderer>();
+            if (lr == null) return;
+
+            lr.numPositions = predictionSteps;
+            lr.SetPosition(0, transform.position);
+
+            Vector3 lastVelocity = Velocity;
+            Vector3 lastPosition = transform.position;
+
+            for (int i = 1; i < predictionSteps; i++)
+            {
+                Vector3 forcesThisStep = GetSumForcesApplyingToMe(lastPosition);
+                Vector3 velocityThisStep = lastVelocity + forcesThisStep * timeStep * i;
+                Vector3 positionThisStep = lastPosition + velocityThisStep * timeStep * i;
+
+                lr.SetPosition(i, positionThisStep);
+
+                lastPosition = positionThisStep;
+                lastVelocity = velocityThisStep;
             }
         }
 
+
+
         /// <summary>
-        /// Returns a list of forces being applied by surrounding planets affecting others.
+        /// Sums the forces applying to me
+        /// </summary>
+        /// <returns>The final force vector</returns>
+        private Vector3 GetSumForcesApplyingToMe(Vector3 position)
+        {
+            List<Vector3> forces = GetForcesApplyingToMe(position);
+
+            Vector3 finalForce = Vector3.zero;
+            // The final force is equal to the sum of each force. *insert darth vader ascii art*
+            foreach (Vector3 force in forces)
+            {
+                finalForce += force;
+            }
+
+            return finalForce;
+        }
+
+        /// <summary>
+        /// Returns a list of individual forces being applied by surrounding planets affecting others.
         /// </summary>
         /// <returns>The list of forces</returns>
-        private List<Vector3> GetForcesApplyingToMe()
+        private List<Vector3> GetForcesApplyingToMe(Vector3 position)
         {
             List<Vector3> forces = new List<Vector3>();
 
@@ -70,9 +117,9 @@ namespace UbiSolarSystem
                 if (planet != null && planet.CanAffectOtherPlanets)
                 {
                     // Calculate the normalized direction
-                    Vector3 pullDirection = Vector3.Normalize(planet.transform.position - transform.position);
+                    Vector3 pullDirection = Vector3.Normalize(planet.transform.position - position);
                     // Newton law => (Mass1 * Mass2 / (distance)²)
-                    float pullForce = (planet.Mass * this.Mass) / Mathf.Pow(Vector3.Distance(planet.transform.position, transform.position), 2f);
+                    float pullForce = (planet.Mass * this.Mass) / Mathf.Pow(Vector3.Distance(planet.transform.position, position), 2f);
                     // Gravitational attraction
                     Vector3 gravityForce = pullDirection * pullForce;
 
