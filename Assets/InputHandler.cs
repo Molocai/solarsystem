@@ -114,6 +114,12 @@ namespace UbiSolarSystem
         {
             if (SelectedPlanet != null)
             {
+                Vector3 currentPos = SelectedPlanet.gameObject.transform.position;
+                Vector3 interpolatedPos = Vector3.Lerp(SelectedPlanet.gameObject.transform.position, GetMousePositionInWorld(), Time.deltaTime * PlanetDragSpeed);
+
+                Vector3 acceleration = (interpolatedPos - currentPos) * (1 / Time.deltaTime);
+
+                SelectedPlanet.Velocity = acceleration;
                 SelectedPlanet.gameObject.transform.position = Vector3.Lerp(SelectedPlanet.gameObject.transform.position, GetMousePositionInWorld(), Time.deltaTime * PlanetDragSpeed);
                 Cursor.visible = false;
             }

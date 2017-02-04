@@ -28,7 +28,7 @@ namespace UbiSolarSystem
         public GameObject PrefabParticlesExplosion;
 
         private List<Planet> PlanetsAffectingMe;
-        private Vector3 Velocity;
+        public Vector3 Velocity;
 
         void Start()
         {
