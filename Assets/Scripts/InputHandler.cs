@@ -1,43 +1,10 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace UbiSolarSystem
 {
     public class InputHandler : MonoBehaviour
     {
-        /// <summary>
-        /// Describes the current click state
-        /// </summary>
-        public enum CLICK_STATUS
-        {
-            /// <summary>
-            /// No button is pressed
-            /// </summary>
-            HOVERING,
-            /// <summary>
-            /// The button is currently begin pressed (scope: frame)
-            /// </summary>
-            CLICKING,
-            /// <summary>
-            /// The button has already been pressed and is being held down
-            /// </summary>
-            DRAGGING,
-            /// <summary>
-            /// The button is currently being released (scope: frame)
-            /// </summary>
-            RELEASING
-        }
-
-        #region Events
-        public delegate void ClickAction();
-        public static event ClickAction OnClickEvent;
-
-        public delegate void ReleaseAction();
-        public static event ReleaseAction OnReleaseEvent;
-
-        public delegate void DragAction();
-        public static event DragAction OnDragEvent;
-        #endregion
-
         /// <summary>
         /// Speed at which the planet will follow the mouse once dragged
         /// </summary>
@@ -48,62 +15,57 @@ namespace UbiSolarSystem
         /// </summary>
         public float ZoomSpeed = 30f;
 
-        private CLICK_STATUS ClickStatus;
         [HideInInspector()]
         public Planet SelectedPlanet;
 
+        private ClickHandler LeftClick;
+        private ClickHandler RightClick;
+
         void Start()
         {
-            ClickStatus = CLICK_STATUS.HOVERING;
+            LeftClick = new ClickHandler(ClickHandler.MOUSE_BUTTON.LEFT);
+            RightClick = new ClickHandler(ClickHandler.MOUSE_BUTTON.RIGHT);
 
-            // Register all the events
-            OnClickEvent += SelectPlanet;
-            OnReleaseEvent += ReleasePlanet;
-            OnDragEvent += DragPlanet;
+            LeftClick.OnClickEvent += SelectPlanet;
+            LeftClick.OnDragEvent += DragPlanet;
+            LeftClick.OnReleaseEvent += ReleasePlanet;
+
+            RightClick.OnClickEvent += StartGrabMap;
         }
 
         void Update()
         {
-            // Left click pressed
-            if (Input.GetMouseButtonDown(0) && ClickStatus == CLICK_STATUS.HOVERING)
-            {
-                ClickStatus = CLICK_STATUS.CLICKING;
+            ProcessMouseButton(LeftClick);
+            ProcessMouseButton(RightClick);
 
-                if (OnClickEvent != null)
-                {
-                    OnClickEvent();
-                }
+            transform.position = Vector3.Lerp(transform.position, transform.position + transform.forward * Input.mouseScrollDelta.y, ZoomSpeed * Time.deltaTime);
+        }
+
+        private void ProcessMouseButton(ClickHandler mouseClick)
+        {
+            // Clicked on this frame
+            if (Input.GetMouseButtonDown((int)mouseClick.MouseButton) && mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.HOVERING)
+            {
+                mouseClick.Click();
             }
 
-            // Left click holded
-            if (Input.GetMouseButton(0) && (ClickStatus == CLICK_STATUS.DRAGGING || ClickStatus == CLICK_STATUS.CLICKING))
+            // Click held down
+            if (Input.GetMouseButton((int)mouseClick.MouseButton) && (mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.DRAGGING || mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.CLICKING))
             {
-                ClickStatus = CLICK_STATUS.DRAGGING;
-
-                if (OnDragEvent != null)
-                {
-                    OnDragEvent();
-                }
+                mouseClick.Drag();
             }
 
-            // Left click released
-            if (Input.GetMouseButtonUp(0) && (ClickStatus == CLICK_STATUS.DRAGGING || ClickStatus == CLICK_STATUS.CLICKING))
+            // Click released
+            if (Input.GetMouseButtonUp((int)mouseClick.MouseButton) && (mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.DRAGGING || mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.CLICKING))
             {
-                ClickStatus = CLICK_STATUS.RELEASING;
-
-                if (OnReleaseEvent != null)
-                {
-                    OnReleaseEvent();
-                }
+                mouseClick.Release();
             }
 
             // Not doing anything
-            if (!Input.GetMouseButton(0) && ClickStatus == CLICK_STATUS.RELEASING)
+            if (!Input.GetMouseButton((int)mouseClick.MouseButton) && mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.RELEASING)
             {
-                ClickStatus = CLICK_STATUS.HOVERING;
+                mouseClick.Hover();
             }
-
-            transform.position = Vector3.Lerp(transform.position, transform.position + transform.forward * Input.mouseScrollDelta.y, ZoomSpeed * Time.deltaTime);
         }
 
         /// <summary>
@@ -139,6 +101,11 @@ namespace UbiSolarSystem
         {
             Cursor.visible = true;
             SelectedPlanet = null;
+        }
+
+        private void StartGrabMap()
+        {
+            Debug.Log("Coucou");
         }
 
         #region Helper functions
