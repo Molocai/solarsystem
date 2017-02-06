@@ -45,7 +45,8 @@ namespace UbiSolarSystem
         public float PlanetDragSpeed = 3f;
 
         private CLICK_STATUS ClickStatus;
-        private Planet SelectedPlanet;
+        [HideInInspector()]
+        public Planet SelectedPlanet;
 
         void Start()
         {
@@ -116,7 +117,7 @@ namespace UbiSolarSystem
             {
                 Vector3 currentPos = SelectedPlanet.gameObject.transform.position;
                 Vector3 interpolatedPos = Vector3.Lerp(SelectedPlanet.gameObject.transform.position, GetMousePositionInWorld(), Time.deltaTime * PlanetDragSpeed);
-
+                // Calculate the acceleration to simulate momentum
                 Vector3 acceleration = (interpolatedPos - currentPos) * (1 / Time.deltaTime);
 
                 SelectedPlanet.Velocity = acceleration;
