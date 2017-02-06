@@ -6,7 +6,6 @@ namespace UbiSolarSystem
     public class Planet : MonoBehaviour
     {
         [Header("Physics parameters")]
-
         /// <summary>
         /// Planet's mass
         /// </summary>
@@ -24,9 +23,6 @@ namespace UbiSolarSystem
         /// </summary>
         public bool IsAffectedByOtherPlanets = true;
 
-        [Header("Cosmetic")]
-        public GameObject PrefabParticlesExplosion;
-
         [Header("Trajectory prediction")]
         /// <summary>
         /// How far in time should we calculate the trajectory prediction
@@ -36,6 +32,9 @@ namespace UbiSolarSystem
         /// Trajectory accuracy. How many vertex should the trajectory prediction use
         /// </summary>
         public int PredictionSteps = 20;
+
+        [Header("Cosmetic")]
+        public GameObject PrefabParticlesExplosion;
 
         /// <summary>
         /// Describes the current Velocity of the planet

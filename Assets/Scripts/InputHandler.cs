@@ -43,6 +43,10 @@ namespace UbiSolarSystem
         /// </summary>
         [Range(0f, 5f)]
         public float PlanetDragSpeed = 3f;
+        /// <summary>
+        /// Speed at which the camera will zoom back and forth
+        /// </summary>
+        public float ZoomSpeed = 30f;
 
         private CLICK_STATUS ClickStatus;
         [HideInInspector()]
@@ -98,6 +102,8 @@ namespace UbiSolarSystem
             {
                 ClickStatus = CLICK_STATUS.HOVERING;
             }
+
+            transform.position = Vector3.Lerp(transform.position, transform.position + transform.forward * Input.mouseScrollDelta.y, ZoomSpeed * Time.deltaTime);
         }
 
         /// <summary>
