@@ -59,7 +59,7 @@ namespace UbiSolarSystem
         private void DrawPrediction()
         {
             float predictionTime = 2f;
-            int predictionSteps = 30;
+            int predictionSteps = 40;
             float timeStep = predictionTime / predictionSteps;
 
             LineRenderer lr = GetComponent<LineRenderer>();
@@ -78,6 +78,15 @@ namespace UbiSolarSystem
                 Vector3 positionThisStep = lastPosition + velocityThisStep * timeStep * i;
 
                 lr.SetPosition(i, positionThisStep);
+
+                RaycastHit hitInfo;
+                Ray rayhit = new Ray(lastPosition, positionThisStep - lastPosition);
+                Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerManager.ToInt(LAYER.PLANET), QueryTriggerInteraction.Ignore);
+                if (hitInfo.collider != null)
+                {
+                    lr.numPositions = i;
+                    i = predictionSteps - 1;
+                }
 
                 lastPosition = positionThisStep;
                 lastVelocity = velocityThisStep;
