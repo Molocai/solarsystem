@@ -18,6 +18,9 @@ namespace UbiSolarSystem
         [HideInInspector()]
         public Planet SelectedPlanet;
 
+        private Vector3 MapGrabPosition;
+        private Vector3 InitialCameraPosition;
+
         private ClickHandler LeftClick;
         private ClickHandler RightClick;
 
@@ -31,6 +34,7 @@ namespace UbiSolarSystem
             LeftClick.OnReleaseEvent += ReleasePlanet;
 
             RightClick.OnClickEvent += StartGrabMap;
+            RightClick.OnDragEvent += DragMap;
         }
 
         void Update()
@@ -105,8 +109,33 @@ namespace UbiSolarSystem
 
         private void StartGrabMap()
         {
-            Debug.Log("Coucou");
+            MapGrabPosition = Input.mousePosition;
+            InitialCameraPosition = transform.position;
         }
+
+        private void DragMap()
+        {
+            Vector3 grabDirection = (Input.mousePosition - MapGrabPosition) / 10;
+            grabDirection.z = grabDirection.y;
+            grabDirection.y = 0;
+            transform.position = InitialCameraPosition - grabDirection;
+        }
+
+        //private void StartGrabMap()
+        //{
+        //    Vector3 mousePosition = GetMousePositionInWorld();
+        //    mousePosition.y = 0;
+
+        //    MapGrabPosition = mousePosition;
+        //    InitialCameraPosition = transform.position;
+        //}
+
+        //private void DragMap()
+        //{
+        //    Vector3 grabDirection = GetMousePositionInWorld() - MapGrabPosition;
+        //    transform.position = InitialCameraPosition - grabDirection;
+        //    Debug.Log("My transform: " + transform.position + " | grabDirection: " + grabDirection);
+        //}
 
         #region Helper functions
         /// <summary>
