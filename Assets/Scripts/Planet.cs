@@ -27,6 +27,16 @@ namespace UbiSolarSystem
         [Header("Cosmetic")]
         public GameObject PrefabParticlesExplosion;
 
+        [Header("Trajectory prediction")]
+        /// <summary>
+        /// How far in time should we calculate the trajectory prediction
+        /// </summary>
+        public float PredictionTime = 2f;
+        /// <summary>
+        /// Trajectory accuracy. How many vertex should the trajectory prediction use
+        /// </summary>
+        public int PredictionSteps = 20;
+
         /// <summary>
         /// Describes the current Velocity of the planet
         /// </summary>
@@ -38,6 +48,7 @@ namespace UbiSolarSystem
         void Start()
         {
             PlanetsAffectingMe = new List<Planet>();
+
             Velocity = InitialVelocity;
         }
 
@@ -51,41 +62,49 @@ namespace UbiSolarSystem
                 Velocity += finalForce * Time.deltaTime;
                 //Debug.DrawLine(transform.position + new Vector3(0, 1, 0), transform.position + Velocity + new Vector3(0, 1, 0), Color.red);
                 transform.position = transform.position + (Velocity * Time.deltaTime);
-            }
 
-            DrawPrediction();
+                DrawPrediction();
+            }
         }
 
+        /// <summary>
+        /// Draws a prediction of the planet's trajectory
+        /// </summary>
         private void DrawPrediction()
         {
-            float predictionTime = 2f;
-            int predictionSteps = 40;
-            float timeStep = predictionTime / predictionSteps;
+            float timeStep = PredictionTime / PredictionSteps;
 
             LineRenderer lr = GetComponent<LineRenderer>();
             if (lr == null) return;
 
-            lr.numPositions = predictionSteps;
+            lr.numPositions = PredictionSteps;
+            // First point is current position
             lr.SetPosition(0, transform.position);
 
+            // These will hold last prediction's values
             Vector3 lastVelocity = Velocity;
             Vector3 lastPosition = transform.position;
 
-            for (int i = 1; i < predictionSteps; i++)
+            for (int i = 1; i < PredictionSteps; i++)
             {
+                // Get all the forces
                 Vector3 forcesThisStep = GetSumForcesApplyingToMe(lastPosition);
-                Vector3 velocityThisStep = lastVelocity + forcesThisStep * timeStep * i;
+                // Calculate velocity at given time
+                Vector3 velocityThisStep = lastVelocity + forcesThisStep * timeStep * i; // (timeStep * i) is the equivalent of Time.deltaTime in the prediction
+                // Deduce positin
                 Vector3 positionThisStep = lastPosition + velocityThisStep * timeStep * i;
 
                 lr.SetPosition(i, positionThisStep);
 
+                // Raycast from last point to new point to check if the prediction is crossing a planet
                 RaycastHit hitInfo;
                 Ray rayhit = new Ray(lastPosition, positionThisStep - lastPosition);
                 Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerManager.ToInt(LAYER.PLANET), QueryTriggerInteraction.Ignore);
+                // If we hit something stop drawing the prediction
                 if (hitInfo.collider != null)
                 {
                     lr.numPositions = i;
-                    i = predictionSteps - 1;
+                    i = PredictionSteps - 1;
                 }
 
                 lastPosition = positionThisStep;
@@ -93,15 +112,14 @@ namespace UbiSolarSystem
             }
         }
 
-
-
         /// <summary>
         /// Sums the forces applying to me
         /// </summary>
+        /// <param name="myPosition">The position to base the maths on</param>
         /// <returns>The final force vector</returns>
-        private Vector3 GetSumForcesApplyingToMe(Vector3 position)
+        private Vector3 GetSumForcesApplyingToMe(Vector3 myPosition)
         {
-            List<Vector3> forces = GetForcesApplyingToMe(position);
+            List<Vector3> forces = GetForcesApplyingToMe(myPosition);
 
             Vector3 finalForce = Vector3.zero;
             // The final force is equal to the sum of each force. *insert darth vader ascii art*
@@ -116,28 +134,35 @@ namespace UbiSolarSystem
         /// <summary>
         /// Returns a list of individual forces being applied by surrounding planets affecting others.
         /// </summary>
+        /// <param name="myPosition">The position to base the maths on</param>
         /// <returns>The list of forces</returns>
-        private List<Vector3> GetForcesApplyingToMe(Vector3 position)
+        private List<Vector3> GetForcesApplyingToMe(Vector3 myPosition)
         {
             List<Vector3> forces = new List<Vector3>();
 
-            foreach (Planet planet in PlanetsAffectingMe)
+            foreach (Planet otherPlanet in PlanetsAffectingMe)
             {
-                if (planet != null && planet.CanAffectOtherPlanets)
+                if (otherPlanet != null && otherPlanet.CanAffectOtherPlanets)
                 {
-                    // Calculate the normalized direction
-                    Vector3 pullDirection = Vector3.Normalize(planet.transform.position - position);
-                    // Newton law => (Mass1 * Mass2 / (distance)²)
-                    float pullForce = (planet.Mass * this.Mass) / Mathf.Pow(Vector3.Distance(planet.transform.position, position), 2f);
-                    // Gravitational attraction
-                    Vector3 gravityForce = pullDirection * pullForce;
+                    // Get the direction the planet's pulling us
+                    Vector3 pullDirection = Vector3.Normalize(otherPlanet.transform.position - myPosition);
+                    // Calculate the magnitude of the force using Newton's law of universal gravitation => (Mass1 * Mass2 / (distance)²)
+                    float pullMagnitude = (otherPlanet.Mass * this.Mass) / Mathf.Pow(Vector3.Distance(otherPlanet.transform.position, myPosition), 2f);
+                    // Final gravitational attraction force
+                    Vector3 gravitationalForce = pullDirection * pullMagnitude;
 
-                    forces.Add(gravityForce);
+                    forces.Add(gravitationalForce);
                 }
             }
 
             return forces;
         }
+
+
+        /// <summary>
+        /// Returns a list of individual forces being applied by surrounding planets affecting others.
+        /// </summary>
+        /// <returns>The list of forces</returns>
 
         private void OnTriggerEnter(Collider other)
         {
