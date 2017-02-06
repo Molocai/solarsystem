@@ -98,11 +98,11 @@ namespace UbiSolarSystem
                 // Raycast from last point to new point to check if the prediction is crossing a planet
                 RaycastHit hitInfo;
                 Ray rayhit = new Ray(lastPosition, positionThisStep - lastPosition);
-                Physics.Raycast(rayhit, out hitInfo, 1000, 1 << LayerManager.ToInt(LAYER.PLANET), QueryTriggerInteraction.Ignore);
+                Physics.Raycast(rayhit, out hitInfo, Vector3.Distance(positionThisStep, lastPosition) * 2f, 1 << LayerManager.ToInt(LAYER.PLANET), QueryTriggerInteraction.Ignore);
                 // If we hit something stop drawing the prediction
                 if (hitInfo.collider != null)
                 {
-                    lr.numPositions = i;
+                    lr.numPositions = i + 1;
                     i = PredictionSteps - 1;
                 }
 
