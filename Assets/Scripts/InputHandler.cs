@@ -21,13 +21,13 @@ namespace UbiSolarSystem
         private Vector3 MapGrabPosition;
         private Vector3 InitialCameraPosition;
 
-        private ClickHandler LeftClick;
-        private ClickHandler RightClick;
+        private ClickContainer LeftClick;
+        private ClickContainer RightClick;
 
         void Start()
         {
-            LeftClick = new ClickHandler(ClickHandler.MOUSE_BUTTON.LEFT);
-            RightClick = new ClickHandler(ClickHandler.MOUSE_BUTTON.RIGHT);
+            LeftClick = new ClickContainer(ClickContainer.MOUSE_BUTTON.LEFT);
+            RightClick = new ClickContainer(ClickContainer.MOUSE_BUTTON.RIGHT);
 
             LeftClick.OnClickEvent += SelectPlanet;
             LeftClick.OnDragEvent += DragPlanet;
@@ -45,28 +45,28 @@ namespace UbiSolarSystem
             transform.position = Vector3.Lerp(transform.position, transform.position + transform.forward * Input.mouseScrollDelta.y, ZoomSpeed * Time.deltaTime);
         }
 
-        private void ProcessMouseButton(ClickHandler mouseClick)
+        private void ProcessMouseButton(ClickContainer mouseClick)
         {
             // Clicked on this frame
-            if (Input.GetMouseButtonDown((int)mouseClick.MouseButton) && mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.HOVERING)
+            if (Input.GetMouseButtonDown((int)mouseClick.MouseButton) && mouseClick.ClickStatus == ClickContainer.CLICK_STATUS.HOVERING)
             {
                 mouseClick.Click();
             }
 
             // Click held down
-            if (Input.GetMouseButton((int)mouseClick.MouseButton) && (mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.DRAGGING || mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.CLICKING))
+            if (Input.GetMouseButton((int)mouseClick.MouseButton) && (mouseClick.ClickStatus == ClickContainer.CLICK_STATUS.DRAGGING || mouseClick.ClickStatus == ClickContainer.CLICK_STATUS.CLICKING))
             {
                 mouseClick.Drag();
             }
 
             // Click released
-            if (Input.GetMouseButtonUp((int)mouseClick.MouseButton) && (mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.DRAGGING || mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.CLICKING))
+            if (Input.GetMouseButtonUp((int)mouseClick.MouseButton) && (mouseClick.ClickStatus == ClickContainer.CLICK_STATUS.DRAGGING || mouseClick.ClickStatus == ClickContainer.CLICK_STATUS.CLICKING))
             {
                 mouseClick.Release();
             }
 
             // Not doing anything
-            if (!Input.GetMouseButton((int)mouseClick.MouseButton) && mouseClick.ClickStatus == ClickHandler.CLICK_STATUS.RELEASING)
+            if (!Input.GetMouseButton((int)mouseClick.MouseButton) && mouseClick.ClickStatus == ClickContainer.CLICK_STATUS.RELEASING)
             {
                 mouseClick.Hover();
             }
@@ -107,12 +107,18 @@ namespace UbiSolarSystem
             SelectedPlanet = null;
         }
 
+        /// <summary>
+        /// Called when the user initiates a right click to move
+        /// </summary>
         private void StartGrabMap()
         {
             MapGrabPosition = Input.mousePosition;
             InitialCameraPosition = transform.position;
         }
 
+        /// <summary>
+        /// Called when the user is dragging the map with right click
+        /// </summary>
         private void DragMap()
         {
             Vector3 grabDirection = (Input.mousePosition - MapGrabPosition) / 10;
@@ -120,22 +126,6 @@ namespace UbiSolarSystem
             grabDirection.y = 0;
             transform.position = InitialCameraPosition - grabDirection;
         }
-
-        //private void StartGrabMap()
-        //{
-        //    Vector3 mousePosition = GetMousePositionInWorld();
-        //    mousePosition.y = 0;
-
-        //    MapGrabPosition = mousePosition;
-        //    InitialCameraPosition = transform.position;
-        //}
-
-        //private void DragMap()
-        //{
-        //    Vector3 grabDirection = GetMousePositionInWorld() - MapGrabPosition;
-        //    transform.position = InitialCameraPosition - grabDirection;
-        //    Debug.Log("My transform: " + transform.position + " | grabDirection: " + grabDirection);
-        //}
 
         #region Helper functions
         /// <summary>

@@ -226,6 +226,16 @@ namespace UbiSolarSystem
             PlanetsAffectingMe.Remove(p);
         }
 
+        public void RandomizeMass(float min, float max, bool adaptScale = true)
+        {
+            Mass = Random.Range(min, max);
+
+            if (adaptScale)
+            {
+                gameObject.transform.localScale = new Vector3(Mass / 10, Mass / 10, Mass / 10);
+            }
+        }
+
         void OnDrawGizmos()
         {
             // Display initial velocity in the editor

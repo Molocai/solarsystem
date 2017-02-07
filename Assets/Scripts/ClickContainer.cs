@@ -1,6 +1,6 @@
 ﻿namespace UbiSolarSystem
 {
-    public class ClickHandler
+    public class ClickContainer
     {
         /// <summary>
         /// Describes the current click state
@@ -45,7 +45,7 @@
         public MOUSE_BUTTON MouseButton;
         public CLICK_STATUS ClickStatus;
 
-        public ClickHandler(MOUSE_BUTTON mb)
+        public ClickContainer(MOUSE_BUTTON mb)
         {
             MouseButton = mb;
             ClickStatus = CLICK_STATUS.HOVERING;
